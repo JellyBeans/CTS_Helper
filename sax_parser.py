@@ -1,6 +1,8 @@
 import xml.sax
 import xml.sax.handler
 import Excel_writer
+import ListBox
+import myTreeView
 
 class CtsTestResultHandler(xml.sax.ContentHandler):
     def __init__(self):
@@ -34,6 +36,8 @@ class CtsTestResultHandler(xml.sax.ContentHandler):
             self.testPackage = ""
             self.testSuits.clear()
             self.failedCaseName.clear()
+        elif tag == "TestSuite":
+            self.testSuits.pop()
         elif tag == "TestCase":
             if len(self.failedCaseName) > 0:
                 packageName = ""
@@ -53,6 +57,7 @@ class CtsTestResultHandler(xml.sax.ContentHandler):
         for (k,v) in self.totalFailedResultDicts.items():
             print(k,v)
             Excel_writer.writeToExcel(self.ctsVersion, self.deviceFingerPrint, self.totalFailedResultDicts)
+        myTreeView.showTreveiw(self.totalFailedResultDicts)
         self.totalFailedResultDicts.clear()
 
 if __name__ == "__main__":
