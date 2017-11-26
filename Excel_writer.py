@@ -1,7 +1,7 @@
 # Please note: While I was able to find these constants within the source code, on my system (using LibreOffice,) I was only presented with a solid line, varying from thin to thick; no dotted or dashed lines.
 import xlwt
 
-def writeToExcel(ctsVersion, deviceFingerPrint, failedCases):
+def writeToExcel(ctsVersion, deviceFingerPrint, failedCases,filePath):
     workbook = xlwt.Workbook()
     worksheet = workbook.add_sheet('FailResult')
     rowCount = 0
@@ -25,7 +25,7 @@ def writeToExcel(ctsVersion, deviceFingerPrint, failedCases):
             rowCount += 1
 
 
-    workbook.save('Excel_Workbook.xls')
+    workbook.save(filePath)
 
 def getStyle(isBold,alignemnt,color):
 

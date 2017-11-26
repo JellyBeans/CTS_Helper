@@ -1,7 +1,6 @@
 import xml.sax
 import xml.sax.handler
 import Excel_writer
-import ListBox
 import myTreeView
 
 class CtsTestResultHandler(xml.sax.ContentHandler):
@@ -25,6 +24,7 @@ class CtsTestResultHandler(xml.sax.ContentHandler):
                 self.failedCaseName.append(attributes["name"])
         elif tag == "BuildInfo":
             self.deviceFingerPrint = attributes["build_fingerprint"]
+            self.buildDevice = attributes["build_device"]
         elif tag == "Cts":
             self.ctsVersion = attributes["version"]
 
@@ -56,9 +56,9 @@ class CtsTestResultHandler(xml.sax.ContentHandler):
     def endDocument(self):
         for (k,v) in self.totalFailedResultDicts.items():
             print(k,v)
-            Excel_writer.writeToExcel(self.ctsVersion, self.deviceFingerPrint, self.totalFailedResultDicts)
-        myTreeView.showTreveiw(self.totalFailedResultDicts)
-        self.totalFailedResultDicts.clear()
+            #Excel_writer.writeToExcel(self.ctsVersion, self.deviceFingerPrint, self.totalFailedResultDicts)
+        #myTreeView.showTreveiw(self.totalFailedResultDicts)
+        #self.totalFailedResultDicts.clear()
 
 if __name__ == "__main__":
     parser = xml.sax.make_parser()
