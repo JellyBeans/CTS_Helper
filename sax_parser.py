@@ -1,31 +1,31 @@
 import xml.sax
 import xml.sax.handler
+import Excel_writer
 
 class CtsTestResultHandler(xml.sax.ContentHandler):
     def __init__(self):
         self.currentTag = ""
-        self.testPackage = ""
         self.testSuits = []
         self.testCase = ""
-        self.testNames = []
-        self.failReuslts =[]
+        self.failedCaseName = []
+        self.deviceFingerPrint = ""
+        self.ctsVersion = ""
+        self.totalFailedResultDicts = {}
 
     def startElement(self,tag,attributes):
         self.currentTag = tag
-        if tag == "TestPackage":
-            #print("--->begin new package",attributes["name"])
-            self.testPackage = attributes["name"]
-        elif tag == "TestSuite":
-            #print("--->suit",attributes["name"])
+        if tag == "TestSuite":
             self.testSuits.append(attributes["name"])
         elif tag == "TestCase":
-            #print("===>testCase",attributes["name"])
             self.testCase = attributes["name"]
         elif tag == "Test":
-            #print("--->tag",attributes["name"])
             if attributes["result"] == "fail":
-                #print("find")
-                self.testNames.append(attributes["name"])
+                self.failedCaseName.append(attributes["name"])
+        elif tag == "BuildInfo":
+            self.deviceFingerPrint = attributes["build_fingerprint"]
+        elif tag == "Cts":
+            self.ctsVersion = attributes["version"]
+
 
 
     def endElement(self,tag):
@@ -33,31 +33,27 @@ class CtsTestResultHandler(xml.sax.ContentHandler):
             self.currentTag = ""
             self.testPackage = ""
             self.testSuits.clear()
-            self.testNames.clear()
+            self.failedCaseName.clear()
         elif tag == "TestCase":
-            if len(self.testNames) > 0:
-                module = ""
+            if len(self.failedCaseName) > 0:
+                packageName = ""
                 for name in self.testSuits:
-                    #print(name+".",end="")
-                    module =module+name+"."
-                #print(self.testCase)
-                module = module+self.testCase
-                self.failReuslts.append(module)
-                for it in self.testNames:
-                    #print(it)
-                    self.failReuslts.append(it)
-                self.testNames.clear()
-                #print("=======================")
-                self.failReuslts.append("================")
+                    packageName =packageName+name+"."
+                packageName = packageName+self.testCase
+                for it in self.failedCaseName:
+                    self.totalFailedResultDicts.setdefault(packageName,[]).append(it)
+                self.failedCaseName.clear()
+
 
 
   #  def characters(self,content):
         #print("content",content)
 
     def endDocument(self):
-        for it in self.failReuslts:
-            print(it)
-        self.failReuslts.clear()
+        for (k,v) in self.totalFailedResultDicts.items():
+            print(k,v)
+            Excel_writer.writeToExcel(self.ctsVersion, self.deviceFingerPrint, self.totalFailedResultDicts)
+        self.totalFailedResultDicts.clear()
 
 if __name__ == "__main__":
     parser = xml.sax.make_parser()
