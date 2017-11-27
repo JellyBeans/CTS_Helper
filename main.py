@@ -1,12 +1,13 @@
 from tkinter import *
 from tkinter import ttk
-import subprocess
 from tkinter import filedialog
 from sax_parser import CtsTestResultHandler
+from tkinter import messagebox
+import subprocess
 import xml.sax
 import xml.sax.handler
 import Excel_writer
-from tkinter import messagebox
+
 
 
 class Main():
@@ -14,18 +15,35 @@ class Main():
         pass
 
     def Run(self):
+        self.isCTSSkipPreconditions = False
+        self.isCTSDisableReboot = False
         self.root = Tk()
         self.root.title("Cts Helper")
         self.addMenu()
-        self.frame = ttk.Frame(self.root, padding=(3, 3, 12, 12))
+        self.frame = ttk.Frame(self.root, padding=(3, 3, 3, 3))
         self.frame.grid(column=0, row=0, sticky=(N, S, E, W))
         self.addTreeView()
+        self.var_check = StringVar()
+        self.check_skipprecondition = ttk.Checkbutton(self.frame, text='--skip-preconditions',variable=self.var_check,command=self.change_option, onvalue='on', offvalue='off')
+        self.check_skipprecondition.grid(column=0,row=1,sticky=W)
+        self.var_reboot = StringVar()
+        self.check_skipprecondition = ttk.Checkbutton(self.frame, text='--disable-reboot', variable=self.var_reboot,command=self.change_option, onvalue='on', offvalue='off')
+        self.check_skipprecondition.grid(column=0, row=2,sticky=W)
 
-
-        btn = ttk.Button(self.frame, text="Choices")
-        btn.grid(column=1, row=1)
-
+        self.root.resizable(False, False)
         self.root.mainloop()
+
+    def change_option(self):
+        if self.var_check.get() == "on":
+            self.isCTSSkipPreconditions = True
+        else:
+            self.isCTSSkipPreconditions = False
+
+        if self.var_reboot.get() == "on":
+            self.isCTSDisableReboot = True
+        else:
+            self.isCTSDisableReboot = False
+
     def loadCtsResult(self):
         self.filename = filedialog.askopenfilename()
         self.parseCtsResult()
@@ -85,14 +103,18 @@ class Main():
     def addTreeView(self):
 
         def onDBClick(event):
-            item = self.tree.selection()[0]
-            if self.tree.parent(item) == "":
+            sitem = self.tree.selection()[0]
+            if self.tree.parent(sitem) == "":
                 print("it's package")
             else:
                 cmd = "/home/ray/Dev/CTS/6.0_r24/android-cts/tools/cts-tradefed run cts"
-                parentID = self.tree.parent(item)
+                parentID = self.tree.parent(sitem)
                 testPackage = self.tree.item(parentID, "text")
-                cmd = cmd + " -c " + testPackage + " -m " + self.tree.item(item, "text") + " --skip-preconditions"
+                cmd = cmd + " -c " + testPackage + " -m " + self.tree.item(sitem, "text")
+                if self.isCTSSkipPreconditions == True:
+                    cmd = cmd + " --skip-preconditions"
+                if self.isCTSDisableReboot == True:
+                    cmd = cmd + " --disable-reboot"
                 #print("cmd" + cmd)
                 child = subprocess.Popen(["xterm", "-e", cmd], stdout=subprocess.PIPE, start_new_session=True)
                 out = child.communicate()
@@ -106,10 +128,10 @@ class Main():
         self.tree.bind("<Double-1>", onDBClick)
         self.tree.pack()
 
-        vbar = ttk.Scrollbar(self.root, orient=VERTICAL, command=self.tree.yview())
+        vbar = ttk.Scrollbar(self.frame, orient=VERTICAL, command=self.tree.yview())
         self.tree.configure(yscrollcommand=vbar.set)
-        self.tree.grid(row=0, column=0, sticky=NSEW)
-        vbar.grid(row=0, column=1, sticky=NS)
+        self.tree.grid(row=0, column=0, sticky=(N,S,E,W))
+        vbar.grid(row=0, column=1, sticky=(N,S,E,W))
 
 
 
