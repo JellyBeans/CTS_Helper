@@ -11,7 +11,9 @@ import Excel_writer
 
 class Main():
     def __init__(self):
-        pass
+        self.tradefedTool = ""
+        self.deviceList = []
+        self.currentSelDev = ""
 
     def run(self):
         self.isCTSSkipPreconditions = False
@@ -31,7 +33,14 @@ class Main():
                                                       command=self.change_option, onvalue='on', offvalue='off')
         self.check_skipprecondition.grid(column=0, row=2,sticky=W)
 
+        devicevar = StringVar()
+        self.adbdeviceCB = ttk.Combobox(self.frame)
+        self.adbdeviceCB.bind('<<ComboboxSelected>>', self.chooseTestDevices)
+        self.adbdeviceCB['values'] = self.deviceList
+        self.adbdeviceCB.grid(column=0, row=3, sticky=(N, W))
+
         self.root.resizable(False, False)
+        self.checkAdbDevices()
         self.root.mainloop()
 
     def change_option(self):
@@ -79,8 +88,52 @@ class Main():
             filename = filedialog.asksaveasfilename(**options)
             Excel_writer.writeToExcel(self.Handler.ctsVersion,self.Handler.deviceFingerPrint,self.Handler.totalFailedResultDicts,filename)
 
+    def checkAdbDevices(self):
+        p = subprocess.Popen("adb devices", shell=True, stdout=subprocess.PIPE, start_new_session=True)
+        ret = p.stdout.readlines()
+        lenth = len(ret)
+        if lenth >= 3:
+            self.deviceList.clear()
+            newList = []
+            for i in range(1,lenth-1):
+                s = ret[i].decode().split('\t')[0]
+                newList.append(s)
+            self.deviceList = newList
+            self.adbdeviceCB['values'] = self.deviceList
+            if self.currentSelDev not in self.deviceList:
+                self.adbdeviceCB.current(0)
+                self.currentSelDev = self.adbdeviceCB.get()
+            if len(self.deviceList) > 1 :
+                messagebox.showinfo(message='More than One Device Connected')
+        else:
+            messagebox.showinfo(message='No device Connected !!!')
+
+    def chooseTestDevices(self,*args):
+        selected = self.adbdeviceCB.get()
+        self.currentSelDev = selected
+        #if selected not in self.currentSelDev:
+            #self.currentSelDev.append(selected)
+
+    def executeCmd(self,cmd,isShell):
+        if isShell == False:
+            child = subprocess.Popen(["xterm", "-e", cmd], stdout=subprocess.PIPE, start_new_session=True)
+        else:
+            child = subprocess.Popen(cmd,shell=True)
+        child.communicate()
+
+
     def createCtsSubPlan(self):
         pass
+
+    def setTestSutiPath(self):
+        self.tradefedTool = filedialog.askopenfilename()
+        if self.tradefedTool == "" or self.tradefedTool == ():
+            messagebox.showinfo(message='Tradefed too must be set!!!')
+
+    def restartADB(self):
+        self.executeCmd("adb kill-server", isShell=True)
+        self.executeCmd("adb devices",isShell=True)
+
 
     def addMenu(self):
         menubar = Menu(self.root)
@@ -88,6 +141,8 @@ class Main():
         fmenu.add_command(label='Load cts result', command=self.loadCtsResult)
         fmenu.add_command(label='Export to Excel', command=self.exportToExcel)
         fmenu.add_command(label='Create subPlan', command=self.createCtsSubPlan)
+        fmenu.add_command(label='Set cts&gts test suit',command=self.setTestSutiPath)
+        fmenu.add_command(label='Restart ADB', command = self.restartADB)
         fmenu.add_command(label='Exit', command=self.root.quit)
 
 
@@ -107,15 +162,26 @@ class Main():
             if self.tree.parent(sitem) == "":
                 print("it's package")
             else:
-                cmd = "/home/ray/Dev/CTS/6.0_r24/android-cts/tools/cts-tradefed run cts"
+                self.checkAdbDevices()
+                if self.tradefedTool == "" or self.tradefedTool == ():
+                    messagebox.showinfo(message='Tradefed tool must be set!!!')
+                    return
+
+                cmd = self.tradefedTool + " run cts"
                 parentID = self.tree.parent(sitem)
                 testPackage = self.tree.item(parentID, "text")
-                cmd = cmd + " -c " + testPackage + " -m " + self.tree.item(sitem, "text")
+                testName = self.tree.item(sitem, "text")
+                cmd = cmd + " -c " + testPackage + " -m " + testName
+                #--serial to specify the device
+                if self.currentSelDev != "":
+                    cmd = cmd + " -s "+self.currentSelDev
+
                 if self.isCTSSkipPreconditions == True:
                     cmd = cmd + " --skip-preconditions"
+
                 if self.isCTSDisableReboot == True:
                     cmd = cmd + " --disable-reboot"
-                #print("cmd" + cmd)
+                print("cmd" + cmd)
                 child = subprocess.Popen(["xterm", "-e", cmd], stdout=subprocess.PIPE, start_new_session=True)
                 out = child.communicate()
 
