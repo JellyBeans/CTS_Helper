@@ -9,12 +9,11 @@ import xml.sax.handler
 import Excel_writer
 
 
-
 class Main():
     def __init__(self):
         pass
 
-    def Run(self):
+    def run(self):
         self.isCTSSkipPreconditions = False
         self.isCTSDisableReboot = False
         self.root = Tk()
@@ -24,10 +23,12 @@ class Main():
         self.frame.grid(column=0, row=0, sticky=(N, S, E, W))
         self.addTreeView()
         self.var_check = StringVar()
-        self.check_skipprecondition = ttk.Checkbutton(self.frame, text='--skip-preconditions',variable=self.var_check,command=self.change_option, onvalue='on', offvalue='off')
+        self.check_skipprecondition = ttk.Checkbutton(self.frame, text='--skip-preconditions',variable=self.var_check,
+                                                      command=self.change_option, onvalue='on', offvalue='off')
         self.check_skipprecondition.grid(column=0,row=1,sticky=W)
         self.var_reboot = StringVar()
-        self.check_skipprecondition = ttk.Checkbutton(self.frame, text='--disable-reboot', variable=self.var_reboot,command=self.change_option, onvalue='on', offvalue='off')
+        self.check_skipprecondition = ttk.Checkbutton(self.frame, text='--disable-reboot', variable=self.var_reboot,
+                                                      command=self.change_option, onvalue='on', offvalue='off')
         self.check_skipprecondition.grid(column=0, row=2,sticky=W)
 
         self.root.resizable(False, False)
@@ -52,10 +53,10 @@ class Main():
 
     def fillTreview(self):
         for key in self.Handler.totalFailedResultDicts:
-            myid = self.tree.insert("", 0, key, text=key)
-            self.tree.item(key, open=True)
+            myid = self.tree.insert("", 0, text=key)
+            self.tree.item(myid, open=True)
             for item in self.Handler.totalFailedResultDicts[key]:
-                self.tree.insert(myid, 0, item, text=item)
+                self.tree.insert(myid, 0, text=item)
 
     def parseCtsResult(self):
         parser = xml.sax.make_parser()
@@ -77,7 +78,6 @@ class Main():
             options['title'] = 'Save File'
             filename = filedialog.asksaveasfilename(**options)
             Excel_writer.writeToExcel(self.Handler.ctsVersion,self.Handler.deviceFingerPrint,self.Handler.totalFailedResultDicts,filename)
-
 
     def createCtsSubPlan(self):
         pass
@@ -137,4 +137,4 @@ class Main():
 
 if __name__ == "__main__":
     myApp = Main()
-    myApp.Run()
+    myApp.run()
