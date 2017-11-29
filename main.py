@@ -40,7 +40,6 @@ class Main():
         self.adbdeviceCB.grid(column=0, row=3, sticky=(N, W))
 
         self.root.resizable(False, False)
-        self.checkAdbDevices()
         self.root.mainloop()
 
     def change_option(self):
