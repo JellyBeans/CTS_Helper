@@ -14,6 +14,8 @@ class Main():
         self.tradefedTool = ""
         self.deviceList = []
         self.currentSelDev = ""
+        self.currentAbi = "Default"
+        self.keyId = []
 
     def run(self):
         self.isCTSSkipPreconditions = False
@@ -24,23 +26,40 @@ class Main():
         self.frame = ttk.Frame(self.root, padding=(3, 3, 3, 3))
         self.frame.grid(column=0, row=0, sticky=(N, S, E, W))
         self.addTreeView()
+
         self.var_check = StringVar()
         self.check_skipprecondition = ttk.Checkbutton(self.frame, text='--skip-preconditions',variable=self.var_check,
                                                       command=self.change_option, onvalue='on', offvalue='off')
         self.check_skipprecondition.grid(column=0,row=1,sticky=W)
+
         self.var_reboot = StringVar()
         self.check_skipprecondition = ttk.Checkbutton(self.frame, text='--disable-reboot', variable=self.var_reboot,
                                                       command=self.change_option, onvalue='on', offvalue='off')
         self.check_skipprecondition.grid(column=0, row=2,sticky=W)
 
+        self.lable_ABI = ttk.Label(self.frame,text="Test ABI")
+        self.lable_ABI.grid(column=0,row=3,sticky=(N,W))
+
+        self.testABICB = ttk.Combobox(self.frame)
+        self.testABICB.bind('<<ComboboxSelected>>', self.set_Abi())
+        self.testABICB['values'] = ["Default","armeabi-v7a","arm64-v8a"]
+        self.testABICB.set("Default")
+        self.testABICB.grid(column=0, row=4, sticky=(N, W, E))
+
+        self.lable_ABI = ttk.Label(self.frame, text="Choose Device")
+        self.lable_ABI.grid(column=0, row=5, sticky=(N, W))
         devicevar = StringVar()
         self.adbdeviceCB = ttk.Combobox(self.frame)
         self.adbdeviceCB.bind('<<ComboboxSelected>>', self.chooseTestDevices)
         self.adbdeviceCB['values'] = self.deviceList
-        self.adbdeviceCB.grid(column=0, row=3, sticky=(N, W, E))
+        self.adbdeviceCB.grid(column=0, row=6, sticky=(N, W, E))
 
         self.root.resizable(False, False)
         self.root.mainloop()
+
+    def set_Abi(self):
+        self.currentAbi = self.testABICB.get()
+
 
     def change_option(self):
         if self.var_check.get() == "on":
@@ -61,11 +80,18 @@ class Main():
 
     def fillTreview(self):
         keys = sorted(self.Handler.totalFailedResultDicts.keys(),reverse=True)
+
+        for it in self.keyId:
+            self.tree.delete(it)
+        self.keyId.clear()
+
         for key in keys:
             myid = self.tree.insert("", 0, text=key)
+            self.keyId.append(myid)
             self.tree.item(myid, open=True)
             for item in self.Handler.totalFailedResultDicts[key]:
                 self.tree.insert(myid, 0, text=item)
+        self.tree.update()
 
     def parseCtsResult(self):
         parser = xml.sax.make_parser()
