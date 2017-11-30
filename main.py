@@ -37,7 +37,7 @@ class Main():
         self.adbdeviceCB = ttk.Combobox(self.frame)
         self.adbdeviceCB.bind('<<ComboboxSelected>>', self.chooseTestDevices)
         self.adbdeviceCB['values'] = self.deviceList
-        self.adbdeviceCB.grid(column=0, row=3, sticky=(N, W))
+        self.adbdeviceCB.grid(column=0, row=3, sticky=(N, W, E))
 
         self.root.resizable(False, False)
         self.root.mainloop()
@@ -97,7 +97,10 @@ class Main():
             newList = []
             for i in range(1,lenth-1):
                 s = ret[i].decode().split('\t')[0]
-                newList.append(s)
+                p=subprocess.Popen("adb"+" -s "+s+" shell getprop ro.product.device", shell=True, stdout=subprocess.PIPE)
+                getPro = p.stdout.readline()
+                newList.append(s+"-"+getPro.decode())
+                #newList.append(s)
             self.deviceList = newList
             self.adbdeviceCB['values'] = self.deviceList
             if self.currentSelDev not in self.deviceList:
@@ -174,7 +177,7 @@ class Main():
                 cmd = cmd + " -c " + testPackage + " -m " + testName
                 #--serial to specify the device
                 if self.currentSelDev != "":
-                    cmd = cmd + " -s "+self.currentSelDev
+                    cmd = cmd + " -s "+self.currentSelDev.split("-")[0]
 
                 if self.isCTSSkipPreconditions == True:
                     cmd = cmd + " --skip-preconditions"
