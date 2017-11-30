@@ -60,7 +60,8 @@ class Main():
 
 
     def fillTreview(self):
-        for key in self.Handler.totalFailedResultDicts:
+        keys = sorted(self.Handler.totalFailedResultDicts.keys(),reverse=True)
+        for key in keys:
             myid = self.tree.insert("", 0, text=key)
             self.tree.item(myid, open=True)
             for item in self.Handler.totalFailedResultDicts[key]:
@@ -188,7 +189,7 @@ class Main():
         self.tree = ttk.Treeview(self.frame, height=30, selectmode="extended")
 
         #set treview width
-        self.tree.column("#0", width=400)
+        self.tree.column("#0", width=600)
 
         self.tree.bind("<Double-1>", onDBClick)
         self.tree.pack()

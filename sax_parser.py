@@ -20,6 +20,9 @@ class CtsTestResultHandler(xml.sax.ContentHandler):
         self.ctsVersion = ""
         self.totalFailedResultDicts = {}
 
+    def startDocument(self):
+        self.totalFailedResultDicts.clear()
+
     def startElement(self,tag,attributes):
         #We will meet this two kind of tag for both two version test suits.
         #We use this to control our pars logic
