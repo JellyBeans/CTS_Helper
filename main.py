@@ -81,6 +81,7 @@ class Main():
     def fillTreview(self):
         keys = sorted(self.Handler.totalFailedResultDicts.keys(),reverse=True)
 
+        # clear Treeview item
         for it in self.keyId:
             self.tree.delete(it)
         self.keyId.clear()
@@ -136,6 +137,8 @@ class Main():
                 messagebox.showinfo(message='More than One Device Connected')
         else:
             messagebox.showinfo(message='No device Connected !!!')
+            self.deviceList.clear()
+            self.adbdeviceCB['values'] = self.deviceList
 
     def chooseTestDevices(self,*args):
         selected = self.adbdeviceCB.get()
