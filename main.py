@@ -41,9 +41,9 @@ class Main():
         self.lable_ABI.grid(column=0,row=3,sticky=(N,W))
 
         self.testABICB = ttk.Combobox(self.frame)
-        self.testABICB.bind('<<ComboboxSelected>>', self.set_Abi())
         self.testABICB['values'] = ["Default","armeabi-v7a","arm64-v8a"]
         self.testABICB.set("Default")
+        self.testABICB.bind('<<ComboboxSelected>>', self.set_Abi())
         self.testABICB.grid(column=0, row=4, sticky=(N, W, E))
 
         self.lable_ABI = ttk.Label(self.frame, text="Choose Device")
@@ -59,6 +59,7 @@ class Main():
 
     def set_Abi(self):
         self.currentAbi = self.testABICB.get()
+        print("set abi to "+self.currentAbi)
 
 
     def change_option(self):
@@ -106,14 +107,14 @@ class Main():
         if "Handler" not in dir(self):
             messagebox.showinfo(message='Please Load Cst result first!!!')
         else:
-            result_file_name = self.Handler.buildDevice + "_" + self.Handler.deviceFingerPrint.split("-")[0].split("/")[4] + "_" + self.Handler.ctsVersion+"_"+"test_result.xls"
+            result_file_name = self.Handler.buildDevice + "_" + self.Handler.deviceFingerPrint.split("-")[0].split("/")[4] + "_" + self.Handler.testSuitName+"_"+self.Handler.suitVersion+"_"+"test_result.xls"
             options = {}
             options['defaultextension'] = '.xls'
             options['filetypes'] = [('Excel file', '.xls')]
             options['initialfile'] = result_file_name
             options['title'] = 'Save File'
             filename = filedialog.asksaveasfilename(**options)
-            Excel_writer.writeToExcel(self.Handler.ctsVersion,self.Handler.deviceFingerPrint,self.Handler.totalFailedResultDicts,filename)
+            Excel_writer.writeToExcel(self.Handler.testSuitName,self.Handler.suitVersion,self.Handler.deviceFingerPrint,self.Handler.totalFailedResultDicts,filename)
 
     def checkAdbDevices(self):
         p = subprocess.Popen("adb devices", shell=True, stdout=subprocess.PIPE, start_new_session=True)
@@ -201,9 +202,17 @@ class Main():
 
                 cmd = self.tradefedTool + " run cts"
                 parentID = self.tree.parent(sitem)
-                testPackage = self.tree.item(parentID, "text")
+                if self.Handler.testSuitClass == "1":
+                    testPackage = self.tree.item(parentID, "text")
+                else:
+                    testPackage = self.tree.item(parentID,"text").split("-")[0]
+
                 testName = self.tree.item(sitem, "text")
-                cmd = cmd + " -c " + testPackage + " -m " + testName
+                if self.Handler.testSuitClass == "1":
+                    cmd = cmd + " -c " + testPackage + " -m " + testName
+                else:
+                    cmd = cmd + " -m " + testPackage + " -t " + testName
+
                 #--serial to specify the device
                 if self.currentSelDev != "":
                     cmd = cmd + " -s "+self.currentSelDev.split("-")[0]
@@ -213,6 +222,10 @@ class Main():
 
                 if self.isCTSDisableReboot == True:
                     cmd = cmd + " --disable-reboot"
+                if self.currentAbi != "Default":
+                    print(self.currentAbi)
+                    cmd = cmd + " --abi "+self.currentAbi
+
                 print("cmd" + cmd)
                 child = subprocess.Popen(["xterm", "-e", cmd], stdout=subprocess.PIPE, start_new_session=True)
                 out = child.communicate()

@@ -5,7 +5,7 @@ import myTreeView
 
 class CtsTestResultHandler(xml.sax.ContentHandler):
     def __init__(self):
-        self.testSuitVersion = 2 # default is new V2
+        self.testSuitClass = 2 # default is new V2
         self.currentTag = ""
         #for v1
         self.testSuitsV1 = []
@@ -17,7 +17,7 @@ class CtsTestResultHandler(xml.sax.ContentHandler):
 
         self.failedCaseName = []
         self.deviceFingerPrint = ""
-        self.ctsVersion = ""
+        self.testSuitClass = ""
         self.totalFailedResultDicts = {}
 
     def startDocument(self):
@@ -28,16 +28,18 @@ class CtsTestResultHandler(xml.sax.ContentHandler):
         #We use this to control our pars logic
         self.currentTag = tag
         if tag == "TestResult":#this tag indicates this is V2 test suit,include GTS & CTS
-            self.testSuitVersion = 1
+            self.testSuitClass = 1
         elif tag == "Result":#this tag indicates this is V1 test suit.
-            self.testSuitVersion = 2
+            self.testSuitClass = 2
+            self.suitVersion = attributes["suite_version"]
+            self.testSuitName = attributes["suite_name"]
 
         #yeah, this is ugly, but jut for work
-        if self.testSuitVersion == 1:
+        if self.testSuitClass == 1:
             #for V1
             if tag == "TestSuite":
                 self.testSuitsV1.append(attributes["name"])
-            elif tag == "testCase":
+            elif tag == "TestCase":
                 self.testCaseV1 = attributes["name"]
             elif tag == "Test":
                 if attributes["result"] == "fail":
@@ -46,8 +48,10 @@ class CtsTestResultHandler(xml.sax.ContentHandler):
             elif tag == "BuildInfo":
                 self.deviceFingerPrint = attributes["build_fingerprint"]
                 self.buildDevice = attributes["build_device"]
+                self.buildDeviceID = attributes["buildID"]
             elif tag == "Cts":
-                self.ctsVersion = attributes["version"]
+                self.suitVersion = attributes["version"]
+                self.testSuitName = "CTS"
         else:
             #for V2
             if tag == "Module":
@@ -58,11 +62,15 @@ class CtsTestResultHandler(xml.sax.ContentHandler):
             elif tag == "Test":
                 if attributes["result"] == "fail":
                     self.failedCaseName.append(self.testCaseV2 + "#"+attributes["name"])
+            elif tag == "Build":
+                self.buildDevice = attributes["build_device"]
+                self.deviceFingerPrint = attributes["build_fingerprint"]
+                self.buildDeviceID = attributes["build_id"]
 
 
 
     def endElement(self,tag):
-        if self.testSuitVersion == 1:
+        if self.testSuitClass == 1:
             if tag == "TestPackage":
                 self.currentTag = ""
                 self.testPackage = ""
@@ -97,7 +105,7 @@ class CtsTestResultHandler(xml.sax.ContentHandler):
         pass
         #for (k,v) in self.totalFailedResultDicts.items():
             #print(k,v)
-            #Excel_writer.writeToExcel(self.ctsVersion, self.deviceFingerPrint, self.totalFailedResultDicts)
+            #Excel_writer.writeToExcel(self.testSuitClass, self.deviceFingerPrint, self.totalFailedResultDicts)
         #myTreeView.showTreveiw(self.totalFailedResultDicts)
         #self.totalFailedResultDicts.clear()
 

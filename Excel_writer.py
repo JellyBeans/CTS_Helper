@@ -1,23 +1,24 @@
 # Please note: While I was able to find these constants within the source code, on my system (using LibreOffice,) I was only presented with a solid line, varying from thin to thick; no dotted or dashed lines.
 import xlwt
 
-def writeToExcel(ctsVersion, deviceFingerPrint, failedCases,filePath):
+def writeToExcel(testSuitName,testSuitVersion, deviceFingerPrint, failedCases,filePath):
     workbook = xlwt.Workbook()
     worksheet = workbook.add_sheet('FailResult')
     rowCount = 0
     #set the column width
-    worksheet.col(1).width = 10000
+    worksheet.col(1).width = 15000
     worksheet.col(2).width = 10000
     #wirte cts version ,deviceFingerPrint and total failed case
     worksheet.write_merge(rowCount,rowCount,0,2,deviceFingerPrint,getStyle(isBold=True,alignemnt=xlwt.Alignment.HORZ_CENTER,color=5))
     rowCount += 1
-    worksheet.write_merge(rowCount,rowCount,0,2,"CTS Version: "+ctsVersion,getStyle(isBold=False,alignemnt=xlwt.Alignment.HORZ_RIGHT,color=5))
+    worksheet.write_merge(rowCount,rowCount,0,2,testSuitName+testSuitVersion,getStyle(isBold=False,alignemnt=xlwt.Alignment.HORZ_RIGHT,color=5))
     rowCount += 1
     worksheet.write_merge(rowCount,rowCount,0,2,"Total Failed Cases: "+ str(len(failedCases)),getStyle(isBold=False,alignemnt=xlwt.Alignment.HORZ_RIGHT,color=5))
     rowCount += 1
 
     #write all failed cases
-    for key in failedCases:
+    keys = sorted(failedCases.keys())
+    for key in keys:
         worksheet.write_merge(rowCount,rowCount,0,2,key,getStyle(isBold=True,alignemnt=xlwt.Alignment.HORZ_LEFT,color=7))
         rowCount += 1
         for caseName in failedCases[key]:
