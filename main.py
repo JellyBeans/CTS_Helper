@@ -7,6 +7,7 @@ import subprocess
 import xml.sax
 import xml.sax.handler
 import Excel_writer
+import os
 
 
 class Main():
@@ -16,6 +17,10 @@ class Main():
         self.currentSelDev = ""
         self.currentAbi = "Default"
         self.keyId = []
+        os.environ['PATH'] = \
+            ':'.join(("/home/tools/android-sdk-linux_x86/build-tools/23.0.1/",
+                      os.getenv('PATH'),))
+
 
     def run(self):
         self.isCTSSkipPreconditions = False
@@ -55,6 +60,11 @@ class Main():
         self.adbdeviceCB.grid(column=0, row=6, sticky=(N, W, E))
 
         self.root.resizable(False, False)
+        print(os.environ["PATH"])
+        env = os.environ.copy()
+        child = subprocess.Popen(["konsole", "-e", "/home/tools/android-sdk-linux_x86/build-tools/23.0.1/aapt"], shell = True,stdout=subprocess.PIPE, start_new_session=True, env=env)
+        out  = child.communicate()
+        print(out)
         self.root.mainloop()
 
     def set_Abi(self):
@@ -200,7 +210,12 @@ class Main():
                     messagebox.showinfo(message='Tradefed tool must be set!!!')
                     return
 
-                cmd = self.tradefedTool + " run cts"
+                cmd = self.tradefedTool
+                if self.Handler.testSuitName == "GTS":
+                    cmd = cmd + " run gts"
+                else:
+                    cmd = cmd + " run cts"
+
                 parentID = self.tree.parent(sitem)
                 if self.Handler.testSuitClass == "1":
                     testPackage = self.tree.item(parentID, "text")
@@ -227,8 +242,11 @@ class Main():
                     cmd = cmd + " --abi "+self.currentAbi
 
                 print("cmd" + cmd)
-                child = subprocess.Popen(["xterm", "-e", cmd], stdout=subprocess.PIPE, start_new_session=True)
+                env = os.environ.copy()
+                print(env["PATH"])
+                child = subprocess.Popen(["xterm", "-e", cmd],stdout=subprocess.PIPE, start_new_session=True,env=env)
                 out = child.communicate()
+                print(out)
 
 
         self.tree = ttk.Treeview(self.frame, height=30, selectmode="extended")
