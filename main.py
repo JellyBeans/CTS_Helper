@@ -60,11 +60,6 @@ class Main():
         self.adbdeviceCB.grid(column=0, row=6, sticky=(N, W, E))
 
         self.root.resizable(False, False)
-        print(os.environ["PATH"])
-        env = os.environ.copy()
-        child = subprocess.Popen(["konsole", "-e", "/home/tools/android-sdk-linux_x86/build-tools/23.0.1/aapt"], shell = True,stdout=subprocess.PIPE, start_new_session=True, env=env)
-        out  = child.communicate()
-        print(out)
         self.root.mainloop()
 
     def set_Abi(self):
@@ -267,3 +262,4 @@ class Main():
 if __name__ == "__main__":
     myApp = Main()
     myApp.run()
+
