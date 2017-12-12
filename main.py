@@ -21,6 +21,35 @@ class Main():
             ':'.join(("/home/tools/android-sdk-linux_x86/build-tools/23.0.1/",
                       os.getenv('PATH'),))
 
+    def addMenu(self):
+        menubar = Menu(self.root)
+
+        fmenu = Menu(menubar)
+        fmenu.add_command(label='Load cts result', command=self.loadCtsResult)
+        fmenu.add_command(label='Export to Excel', command=self.exportToExcel)
+        fmenu.add_command(label='Create subPlan', command=self.createCtsSubPlan)
+        fmenu.add_command(label='Set cts&gts test suit', command=self.setTestSutiPath)
+        fmenu.add_command(label='Restart ADB', command=self.restartADB)
+        fmenu.add_command(label='Exit', command=self.root.quit)
+
+        # tool menu
+        toolMenu = Menu(menubar)
+        toolMenu.add_command(label="Check Apk CERT", command=self.checkApkCert)
+
+        aboutMenu = Menu(menubar)
+        for item in ['Copright']:
+            aboutMenu.add_command(label=item)
+
+        menubar.add_cascade(label="File", menu=fmenu)
+        menubar.add_cascade(label="Tool", menu=toolMenu)
+        menubar.add_cascade(label="About", menu=aboutMenu)
+
+        self.root['menu'] = menubar
+
+    def initUI(self):
+        pass
+
+
 
     def run(self):
         self.isCTSSkipPreconditions = False
@@ -154,10 +183,22 @@ class Main():
 
     def executeCmd(self,cmd,isShell):
         if isShell == False:
-            child = subprocess.Popen(["xterm", "-e", cmd], stdout=subprocess.PIPE, start_new_session=True)
+            print(cmd)
+            child = subprocess.Popen(["konsole", "-e", cmd], stdout=subprocess.PIPE, start_new_session=True)
+
         else:
-            child = subprocess.Popen(cmd,shell=True)
-        child.communicate()
+            child = subprocess.Popen(cmd,shell=True, stdout=subprocess.PIPE)
+            ret = child.stdout.readlines()
+            str = ""
+            for it in ret:
+                str += it.decode()
+            print(str)
+            # messagebox.showinfo(message=str)
+            tl = Toplevel(self.root,height=200, width=400)
+            # Make topLevelWindow remain on top until destroyed, or attribute changes.
+            tl.attributes('-topmost', 'true')
+            Label(tl, text=str, justify=LEFT).pack()
+
 
 
     def createCtsSubPlan(self):
@@ -173,29 +214,12 @@ class Main():
         self.executeCmd("adb devices",isShell=True)
 
 
-    def addMenu(self):
-        menubar = Menu(self.root)
-        fmenu = Menu(menubar)
-        fmenu.add_command(label='Load cts result', command=self.loadCtsResult)
-        fmenu.add_command(label='Export to Excel', command=self.exportToExcel)
-        fmenu.add_command(label='Create subPlan', command=self.createCtsSubPlan)
-        fmenu.add_command(label='Set cts&gts test suit',command=self.setTestSutiPath)
-        fmenu.add_command(label='Restart ADB', command = self.restartADB)
-        fmenu.add_command(label='Exit', command=self.root.quit)
-
-
-        aboutMenu = Menu(menubar)
-        for item in ['Copright']:
-            aboutMenu.add_command(label=item)
-
-        menubar.add_cascade(label="File", menu=fmenu)
-        menubar.add_cascade(label="About", menu=aboutMenu)
-
-        self.root['menu'] = menubar
-
     def addTreeView(self):
 
         def onDBClick(event):
+            if self.keyId == []:
+                print("No element")
+                return
             sitem = self.tree.selection()[0]
             if self.tree.parent(sitem) == "":
                 print("it's package")
@@ -257,6 +281,26 @@ class Main():
         self.tree.grid(row=0, column=0, sticky=(N,S,E,W))
         vbar.grid(row=0, column=1, sticky=(N,S,E,W))
 
+    def checkApkCert(self):
+        options = {}
+        options['defaultextension'] = '.apk'
+        options['filetypes'] = [('Android APK', '.apk')]
+        options['title'] = 'Open Apk'
+        apkfilename = filedialog.askopenfilename(**options)
+        if apkfilename == "" or apkfilename == ():
+            # user has canceled the choosing of file dialog
+            return
+        cmd = "keytool -printcert -jarfile " + apkfilename
+        child = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+        ret = child.stdout.readlines()
+        str = ""
+        for it in ret:
+            str += it.decode()
+        tl = Toplevel(self.root, height=200, width=400)
+        tl.title(apkfilename)
+        # Make topLevelWindow remain on top until destroyed, or attribute changes.
+        tl.attributes('-topmost', 'true')
+        Label(tl, text=str, justify=LEFT).pack()
 
 
 if __name__ == "__main__":
