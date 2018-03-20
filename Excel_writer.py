@@ -13,10 +13,11 @@ def writeToExcel(testSuitName,testSuitVersion, deviceFingerPrint, failedCases,fi
     rowCount += 1
     worksheet.write_merge(rowCount,rowCount,0,2,testSuitName+testSuitVersion,getStyle(isBold=False,alignemnt=xlwt.Alignment.HORZ_RIGHT,color=5))
     rowCount += 1
-    worksheet.write_merge(rowCount,rowCount,0,2,"Total Failed Cases: "+ str(len(failedCases)),getStyle(isBold=False,alignemnt=xlwt.Alignment.HORZ_RIGHT,color=5))
+    #worksheet.write_merge(rowCount,rowCount,0,2,"Total Failed Cases: "+ str(len(failedCases)),getStyle(isBold=False,alignemnt=xlwt.Alignment.HORZ_RIGHT,color=5))
     rowCount += 1
 
     #write all failed cases
+    totalFailedItem = 0
     keys = sorted(failedCases.keys())
     for key in keys:
         worksheet.write_merge(rowCount,rowCount,0,2,key,getStyle(isBold=True,alignemnt=xlwt.Alignment.HORZ_LEFT,color=7))
@@ -24,6 +25,10 @@ def writeToExcel(testSuitName,testSuitVersion, deviceFingerPrint, failedCases,fi
         for caseName in failedCases[key]:
             worksheet.write(rowCount,1,caseName)
             rowCount += 1
+            totalFailedItem +=1
+
+    #Write the total fail count
+    worksheet.write_merge(2,2,0,2,"Total Failed Cases: "+ str(totalFailedItem),getStyle(isBold=False,alignemnt=xlwt.Alignment.HORZ_RIGHT,color=5))
 
 
     workbook.save(filePath)
